@@ -20,6 +20,7 @@ type Message struct {
 	File       string `json:"file"`
 	gorm.Model
 }
+
 var DB *gorm.DB
 var DBErr error
 
@@ -38,7 +39,14 @@ func main(){
 		Password: "",
 		DB: 0,
 	})
-	result, err := client.HSet(ctx,"message:"+strconv.Itoa(data.ChatRoomID),"sender",data.Sender,"receiver",data.Receiver,"chatroom",data.ChatRoomID,"message",data.Message,"type",data.Type,"file","","create_at",data.CreatedAt,"update_at",data.UpdatedAt,"delete_at","").Result()
+	bytemessage := []byte(data.Message)
+	fmt.Println(bytemessage)
+	for i:=range bytemessage {
+		fmt.Printf("%T",bytemessage[i])
+}
+	result, err := client.HSet(ctx,"message:"+strconv.Itoa(data.ChatRoomID),"sender",data.Sender,"receiver",data.Receiver,
+	"chatroom",data.ChatRoomID,"message",bytemessage,"type",data.Type,"file","","create_at",data.CreatedAt,"update_at",
+	data.UpdatedAt,"delete_at","").Result()
 	if err != nil{
 		log.Println(err)
 	}
@@ -53,7 +61,7 @@ func main(){
 func GetMessage() Message{
 	Connection()
 	var message Message
-	DB.First(&message,1386)
+	DB.First(&message,1370)
 	return message
 }
 func GetAllMessage() interface{} {
