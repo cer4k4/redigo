@@ -31,29 +31,42 @@ func Connection() {
 }
 
 func main(){
-	data := GetMessage()
+	var data []Message
+	for i:= 1368;i<=1420;i++{
+	data = append(data,GetMessage(i))
+}
+for d:=0;d<len(data);d++{
 	ctx := context.Background()
 	client := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 		Password: "",
 		DB: 0,
 	})
-	result , err := client.HSet(ctx,"message:"+strconv.Itoa(data.ChatRoomID),"sender",data.Sender,"receiver",data.Receiver,
-	"chatroom",data.ChatRoomID,"message",data.Message,"type",data.Type,"file","","create_at",data.CreatedAt,"update_at",
-	data.UpdatedAt,"delete_at","").Result()
+	err := client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
+	"sender",data[d].Sender,
+	"receiver",data[d].Receiver,
+	"chatroom",data[d].ChatRoomID,
+	"message",data[d].Message,
+	"type",data[d].Type,
+	"file","",
+	"create_at",
+	data[d].CreatedAt,"update_at",
+	data[d].UpdatedAt,"delete_at","")
 	if err != nil{
 		log.Println(err)
 	}
-	fmt.Println(result)
+	fmt.Println("Row affected : ",data[d].ID)
+}
 //	data := GetAllMessage()
 //	fmt.Println(data)
 }
 
 
-func GetMessage() Message{
+func GetMessage(i int) Message{
 	Connection()
+	defer DB.Close()
 	var message Message
-	DB.First(&message,1370)
+	DB.Find(&message,i)
 	return message
 }
 func GetAllMessage() interface{} {
