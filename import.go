@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"context"
 	"fmt"
 	"log"
@@ -32,6 +33,8 @@ func Connection() {
 
 func main(){
 	var data []Message
+	t := time.Tick(1 * time.Minute)
+	for next := range t {
 	for i:= 1368;i<=1420;i++{
 	data = append(data,GetMessage(i))
 }
@@ -42,7 +45,7 @@ for d:=0;d<len(data);d++{
 		Password: "",
 		DB: 0,
 	})
-	err := client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
+	_ = client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
 	"sender",data[d].Sender,
 	"receiver",data[d].Receiver,
 	"chatroom",data[d].ChatRoomID,
@@ -52,13 +55,14 @@ for d:=0;d<len(data);d++{
 	"create_at",
 	data[d].CreatedAt,"update_at",
 	data[d].UpdatedAt,"delete_at","")
-	if err != nil{
+	/*	if err != nil{
 		log.Println(err)
+		}
+	*/
+//	fmt.Println("affected : ",data[d].ID)
 	}
-	fmt.Println("Row affected : ",data[d].ID)
+	fmt.Println(next)
 }
-//	data := GetAllMessage()
-//	fmt.Println(data)
 }
 
 
@@ -75,4 +79,3 @@ func GetAllMessage() interface{} {
 	DB.Find(&messages)
 	return messages
 }
-
