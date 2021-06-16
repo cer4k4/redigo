@@ -29,14 +29,17 @@ func Connection() {
 	if DBErr != nil {
 		log.Println(DBErr)
 	}
+
 }
 
 func main(){
+	Connection()
+	defer DB.Close()
 	var data []Message
-	t := time.Tick(1 * time.Minute)
+	t := time.Tick( 30 * time.Second)
 	for next := range t {
 	for i:= 1368;i<=1420;i++{
-	data = append(data,GetMessage(i))
+	data = append(data,GetMessage(i,DB))
 }
 for d:=0;d<len(data);d++{
 	ctx := context.Background()
@@ -55,22 +58,15 @@ for d:=0;d<len(data);d++{
 	"create_at",
 	data[d].CreatedAt,"update_at",
 	data[d].UpdatedAt,"delete_at","")
-	/*	if err != nil{
-		log.Println(err)
-		}
-	*/
-//	fmt.Println("affected : ",data[d].ID)
 	}
 	fmt.Println(next)
 }
 }
 
 
-func GetMessage(i int) Message{
-	Connection()
-	defer DB.Close()
+func GetMessage(i int, db *gorm.DB) Message{
 	var message Message
-	DB.Find(&message,i)
+	db.Find(&message,i)
 	return message
 }
 func GetAllMessage() interface{} {
