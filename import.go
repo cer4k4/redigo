@@ -1,7 +1,7 @@
 package main
 
 import (
-	"time"
+//	"time"
 	"context"
 	"fmt"
 	"log"
@@ -23,55 +23,108 @@ type Message struct {
 
 var DB *gorm.DB
 var DBErr error
+var client *redis.Client
 
-func Connection() {
+//Connetions
+func ConnectionDB() {
 	DB, DBErr = gorm.Open("mysql", "golang:golang123@(localhost)/golang_test?charset=utf8&parseTime=True&loc=Local")
 	if DBErr != nil {
 		log.Println(DBErr)
 	}
 
 }
-
-func main(){
-	Connection()
-	defer DB.Close()
-	var data []Message
-	t := time.Tick( 30 * time.Second)
-	for next := range t {
-	for i:= 1368;i<=1420;i++{
-	data = append(data,GetMessage(i,DB))
-}
-for d:=0;d<len(data);d++{
-	ctx := context.Background()
-	client := redis.NewClient(&redis.Options{
+func ConnectionRedis() {
+	client = redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 		Password: "",
 		DB: 0,
 	})
-	_ = client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
-	"sender",data[d].Sender,
-	"receiver",data[d].Receiver,
-	"chatroom",data[d].ChatRoomID,
-	"message",data[d].Message,
-	"type",data[d].Type,
-	"file","",
-	"create_at",
-	data[d].CreatedAt,"update_at",
-	data[d].UpdatedAt,"delete_at","")
-	}
-	fmt.Println(next)
 }
+
+func main() {
+	ctx := context.Background()
+	ConnectionDB()
+	ConnectionRedis()
+	defer DB.Close()
+	//var datards []Message
+	var data []Message
+//	t := time.Tick( 30 * time.Second)
+//	for next := range t {
+		for i:= 1368;i<=1420;i++{
+				data = append(data,GetMessageFromDB(i,DB))
+				res, _ := client.HMGet(ctx,"message:"+strconv.Itoa(i),"message","id").Result()
+				if res != nil{
+				fmt.Println(res.{Message})
+				}
+			}
+
+		//append to redis
+		for d:=0;d<len(data);d++{
+			_ = client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
+			"sender",data[d].Sender,
+			"receiver",data[d].Receiver,
+			"chatroom",data[d].ChatRoomID,
+			"message",data[d].Message,
+			"type",data[d].Type,
+			"file","",
+			"id",int(data[d].ID),
+			"create_at",data[d].CreatedAt,
+			"update_at",data[d].UpdatedAt,
+			"delete_at","")
+		}
+	//	fmt.Println(next)
+//	}
 }
 
 
-func GetMessage(i int, db *gorm.DB) Message{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Query's
+func GetMessageFromDB(i int, db *gorm.DB) Message{
 	var message Message
 	db.Find(&message,i)
 	return message
 }
-func GetAllMessage() interface{} {
-	Connection()
-	messages := []Message{}
-	DB.Find(&messages)
-	return messages
-}
+/*
+func GetMessageFromRedis(i int,client *redis.Client) Message{
+	var r []Message
+	ctx := context.Background()
+	for i:=1368;i<=1420;i++{
+		res, _ := client.HGetAll(ctx,"message:"+strconv.Itoa(i)).Result()
+		r = append(r,r[i].Message)
+		if i == 1420{
+			fmt.Println(i)
+		}
+		for i:=1;i<len(r);i++{
+			fmt.Println(r[i])
+		}
+	}
+	return r
+}*/
+

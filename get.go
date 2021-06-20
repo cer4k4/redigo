@@ -18,7 +18,7 @@ type Message struct {
 
 
 func main(){
-	var r []string
+	var r []int
 	ctx := context.Background()
 	client := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
@@ -26,12 +26,17 @@ func main(){
 		DB: 0,
 	})
 	for i:=1368;i<=1420;i++{
-		res , _ := client.HGet(ctx,"message:"+strconv.Itoa(i),"message").Result()
-r = append(r,res)
-}
-for i:=0; i<len(r);i++{
-	fmt.Println(r[i])
-}
+		res , _ := client.HGet(ctx,"message:"+strconv.Itoa(i),"id").Result()
+		ints , _ := strconv.Atoi(res)
+		r = append(r,ints)
+		if i == 1420{
+			fmt.Println(i)
+		}
+	}
+	for i:=1; i<len(r);i++{
+		fmt.Println(r[i])
+		fmt.Printf("%T",client)
+	}
 }
 
 
