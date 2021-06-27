@@ -47,31 +47,46 @@ func main() {
 	ConnectionRedis()
 	defer DB.Close()
 	//var datards []Message
-	var data []Message
+//	var data []Message
 //	t := time.Tick( 30 * time.Second)
 //	for next := range t {
-		for i:= 1368;i<=1420;i++{
-				data = append(data,GetMessageFromDB(i,DB))
-				res, _ := client.HMGet(ctx,"message:"+strconv.Itoa(i),"message","id").Result()
-				if res != nil{
-				fmt.Println(res.{Message})
+var a []string
+		//get from redis
+		for i:= 1368;i<=1390;i++{
+				//data = append(data,GetMessageFromDB(i,DB))
+				res, _ := client.HMGet(ctx,"message:"+strconv.Itoa(i),"message","id","file").Result()
+				if res != nil && res[0] != nil || res[2] != nil{
+					fmt.Println(res[1])
+					a = res{"id"}
 				}
 			}
+			fmt.Println(a)
+
 
 		//append to redis
-		for d:=0;d<len(data);d++{
+		/*for d:=0;d<len(data);d++{
+			if data[d].File == ""{
+				data[d].File = ""
+			}else{
+				data[d].File = data[d].File
+			}
+			if data[d].Message == ""{
+				data[d].Message = ""
+			}else{
+				data[d].Message = data[d].Message
+			}
 			_ = client.HSet(ctx,"message:"+strconv.FormatUint(uint64(data[d].ID),10),
 			"sender",data[d].Sender,
 			"receiver",data[d].Receiver,
 			"chatroom",data[d].ChatRoomID,
 			"message",data[d].Message,
 			"type",data[d].Type,
-			"file","",
+			"file",data[d].File,
 			"id",int(data[d].ID),
 			"create_at",data[d].CreatedAt,
 			"update_at",data[d].UpdatedAt,
 			"delete_at","")
-		}
+		}*/
 	//	fmt.Println(next)
 //	}
 }
