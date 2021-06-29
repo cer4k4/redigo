@@ -27,7 +27,7 @@ var client *redis.Client
 
 //Connetions
 func ConnectionDB() {
-	DB, DBErr = gorm.Open("mysql", "golang:golang123@(localhost)/golang_test?charset=utf8&parseTime=True&loc=Local")
+	DB, DBErr = gorm.Open("mysql", "root:Qtlsd@k47@(localhost)/golang?charset=utf8&parseTime=True&loc=Local")
 	if DBErr != nil {
 		log.Println(DBErr)
 	}
@@ -42,60 +42,81 @@ func ConnectionRedis() {
 }
 
 func main() {
-	//var datards []Message
-	ctx := context.Background()
+//var datards []Message
+//	ctx := context.Background()
 	ConnectionDB()
 	ConnectionRedis()
 	defer DB.Close()
+
+	t := time.Tick( 30 * time.Second)
+	for next := range t {
+		UpdateRedis(DB,client)
+		fmt.Println(next)
+	}
+}
+
+
+
+
+
+
+func UpdateRedis(DB *gorm.DB , client *redis.Client){
+	ctx := context.Background()
 	var getmaxdb Message
 	var maxdb int
 	var maxredis int
+	var count int
 	var data []Message
-	t := time.Tick( 30 * time.Second)
-	for next := range t {
-		DB.Last(&getmaxdb)
-		maxdb = int(getmaxdb.ID)
-		maxredis = GetMaxFromRedis(maxdb)
-		fmt.Println("Redis ",maxredis)
-		fmt.Println("DB ",maxdb)
-		//append to redis
-			for maxredis = maxredis;maxredis <= maxdb;maxredis++{
-				data = append(data,GetMessageFromDB(maxredis,DB))
-				if data[maxredis].Message !="" || data[maxredis].File != ""{
-
-				for d := range data{
-					if data[d].File == ""{
-						data[d].File = ""
-					}else{
-						data[d].File = data[d].File
-					}
-					if data[d].Message == ""{
-						data[d].Message = ""
-					}else{
-						data[d].Message = data[d].Message
-					}
-					key := "message:"+strconv.FormatUint(uint64(data[d].ID),10)
-					_ = client.HSet(ctx,key,
-					"sender",data[d].Sender,
-					"receiver",data[d].Receiver,
-					"chatroom",data[d].ChatRoomID,
-					"message",data[d].Message,
-					"type",data[d].Type,
-					"file",data[d].File,
-					"id",int(data[d].ID),
-					"create_at",data[d].CreatedAt,
-					"update_at",data[d].UpdatedAt,
-					"delete_at","")
-					_ = client.Do(ctx,"EXPIRE",key,50)
-				}
+	DB.Last(&getmaxdb)
+	maxdb = int(getmaxdb.ID)
+	maxredis = GetMaxFromRedis(maxdb)
+	fmt.Println("Redis ",maxredis)
+	fmt.Println("DB ",maxdb)
+	//append to redis
+	if maxredis == maxdb{
+		fmt.Println("Not Diffrence Between DB & Redis")
+	}else{
+		for maxredis = maxredis;maxredis <= maxdb;maxredis++{
+			data = append(data,GetMessageFromDB(maxredis,DB))
+			if data[maxredis].Message == "" && data[maxredis].File == ""{
 			}
+			for d := range data{
+				if data[d].File == ""{
+					data[d].File = ""
+				}else{
+					data[d].File = data[d].File
+				}
+				if data[d].Message == ""{
+					data[d].Message = ""
+				}else{
+					data[d].Message = data[d].Message
+				}
+				key := "message:"+strconv.FormatUint(uint64(data[d].ID),10)
+				_ = client.HSet(ctx,key,
+				"sender",data[d].Sender,
+				"receiver",data[d].Receiver,
+				"chatroom",data[d].ChatRoomID,
+				"message",data[d].Message,
+				"type",data[d].Type,
+				"file",data[d].File,
+				"id",int(data[d].ID),
+				"create_at",data[d].CreatedAt,
+				"update_at",data[d].UpdatedAt,
+				"delete_at","")
+				_ = client.Do(ctx,"EXPIRE",key,2592000)
+				}
+			
 		}
-		if maxdb == maxredis{
-			fmt.Println("Not Differnt Between DB & Redis")
-		}
-			fmt.Println(next)
+			fmt.Printf("Homm We Have %d Difference Between DB & Redis \n",count)
 	}
 }
+
+
+
+
+
+
+
 
 
 
