@@ -27,7 +27,7 @@ var client *redis.Client
 
 //Connetions
 func ConnectionDB() {
-	DB, DBErr = gorm.Open("mysql", "root:Qtlsd@k47@(localhost)/golang?charset=utf8&parseTime=True&loc=Local")
+	DB, DBErr = gorm.Open("mysql", "golang:golang123@(localhost)/golang_test?charset=utf8&parseTime=True&loc=Local")
 	if DBErr != nil {
 		log.Println(DBErr)
 	}
@@ -47,7 +47,7 @@ func main() {
 	ConnectionDB()
 	ConnectionRedis()
 	defer DB.Close()
-
+	defer client.Close()
 	t := time.Tick( 30 * time.Second)
 	for next := range t {
 		UpdateRedis(DB,client)
@@ -65,7 +65,6 @@ func UpdateRedis(DB *gorm.DB , client *redis.Client){
 	var getmaxdb Message
 	var maxdb int
 	var maxredis int
-	var count int
 	var data []Message
 	DB.Last(&getmaxdb)
 	maxdb = int(getmaxdb.ID)
@@ -78,7 +77,6 @@ func UpdateRedis(DB *gorm.DB , client *redis.Client){
 	}else{
 		for maxredis = maxredis;maxredis <= maxdb;maxredis++{
 			data = append(data,GetMessageFromDB(maxredis,DB))
-			if data[maxredis].Message == "" && data[maxredis].File == ""{
 			}
 			for d := range data{
 				if data[d].File == ""{
@@ -105,10 +103,9 @@ func UpdateRedis(DB *gorm.DB , client *redis.Client){
 				"delete_at","")
 				_ = client.Do(ctx,"EXPIRE",key,2592000)
 				}
-			
+			fmt.Printf("Homm We Have %d Difference Message Between DB & Redis \n",len(data)-1)
+			fmt.Println("No Problem Honey , Updated :)")
 		}
-			fmt.Printf("Homm We Have %d Difference Between DB & Redis \n",count)
-	}
 }
 
 
